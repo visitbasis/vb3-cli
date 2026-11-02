@@ -29,10 +29,15 @@ if [ -z "$version" ]; then
   latest=$(fetch --head --output /dev/null --write-out '%{url_effective}' "$repo/releases/latest") || fail 'could not resolve the latest public release'
   case "$latest" in "$repo/releases/tag/"*) version=${latest#"$repo/releases/tag/"} ;; *) fail 'unexpected latest-release redirect' ;; esac
 fi
+# Any exact v0.MINOR.PATCH: digits only, no leading zeros, nothing after.
 case "$version" in
-  v0.4.*)
-    patch=${version#v0.4.}
-    case "$patch" in ''|*[!0-9]*|0[0-9]*) fail 'VB3_VERSION must be an exact release tag such as v0.4.0' ;; esac
+  v0.*.*)
+    minor=${version#v0.}
+    patch=${minor#*.}
+    minor=${minor%%.*}
+    for part in "$minor" "$patch"; do
+      case "$part" in ''|*[!0-9]*|0[0-9]*) fail 'VB3_VERSION must be an exact release tag such as v0.4.0' ;; esac
+    done
     ;;
   *) fail 'VB3_VERSION must be an exact release tag such as v0.4.0' ;;
 esac

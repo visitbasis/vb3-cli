@@ -10,20 +10,14 @@ Intel/AMD 64-bit or ARM64. Windows is checked by hand; see below. No Go installa
 curl -fsSL https://github.com/visitbasis/vb3-cli/releases/latest/download/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 vb3 --help
-vb3 skill install claude
-# Or: vb3 skill install codex
 ```
 
 The installer verifies the archive's SHA-256 checksum and installs to `~/.local/bin/vb3`.
 Running it again with the same binary leaves the installation unchanged. It prints the
 PATH command when needed; a piped script cannot change the parent shell's PATH.
 
-The skill is embedded in the binary. Claude Code installs to
-`~/.claude/skills/vb3-cli/SKILL.md`; Codex installs to `~/.agents/skills/vb3-cli/SKILL.md`.
-An identical skill is left alone. If installation reports "differs from installed at",
-review the named file. Use `vb3 skill install claude --force` (or `codex`) only if you
-intend to replace that differing copy. Start a fresh host session
-after installation and invoke `/vb3-cli` in Claude Code or `$vb3-cli` in Codex.
+There is no separate AI skill to install. `vb3 --help` tells your AI assistant how to
+work, so it always matches the installed binary.
 
 ## Connect
 
@@ -43,22 +37,21 @@ vb3 logout
 Check the displayed connection code, choose your account and press Connect. The command
 remembers that connection privately for your operating-system user. No credential is
 pasted into the terminal. Logout removes it even offline and reports when remote
-revocation cannot be confirmed. Help and skill installation work offline. Windows update instructions work offline; macOS and Linux updates need a network connection.
+revocation cannot be confirmed. Help works offline; updates need a network connection.
 Local help lists supported options. Command-line wording is available in English,
 Spanish and Russian; new Windows Spanish and Russian wording is provisional.
 
-## Update or pin on macOS or Linux
+## Update or pin
 
 ```sh
 vb3 update
 vb3 update --json
 ```
 
-Update downloads the latest release, verifies its checksum and atomically replaces the
-running executable. A failed download or verification leaves the installed binary intact.
-Restart the command afterward. Run `vb3 skill install claude` (or `codex`) after updating
-to refresh its embedded guidance. Use `--force` only after a difference is reported and
-you have decided to replace the named file; identical content does not need it.
+Update downloads the latest release, verifies its checksum and replaces the running
+executable. A failed download or verification leaves the installed binary intact.
+Restart the command afterward. `vb3 update` works the same on Windows; see
+[Connect and update](#connect-and-update) below.
 
 `vb3 update` refuses to replace a dev/source build. If you intend to replace that
 source-built executable with a public release, use `vb3 update --force`.
@@ -109,7 +102,7 @@ No administrator rights, WSL, Go or extra software are needed.
 
 <!-- windows-bootstrap-start -->
 ```powershell
-$BootstrapMessages = ConvertFrom-Json '{"windows_download_blocked":"The release download was refused by the service or a security check. Contact your support team; keep Windows protection on.","windows_download_failed":"The release download failed. Try again later.","windows_download_network":"The release download could not be reached. Check your network connection and try again.","windows_release_name_invalid":"That release name is not valid. Copy the release tag exactly from the release page; it must look like v0.4.2.","windows_release_unavailable":"Windows files are unavailable for this release. Choose a release that includes Windows files, or try again later."}'; $VB3DownloadErrorKeys = ConvertFrom-Json '{"403":"windows_download_blocked","404":"windows_release_unavailable","407":"windows_download_blocked","451":"windows_download_blocked","network":"windows_download_network","other":"windows_download_failed","security":"windows_download_blocked"}'; function Get-VB3DownloadErrorKey($Failure) {;     while ($Failure.InnerException -and $Failure -isnot [Net.WebException]) {;         $Failure = $Failure.InnerException;     };     $code = 0;     if ($Failure.Response) {;         $code = [int]$Failure.Response.StatusCode;     };     $key = $VB3DownloadErrorKeys."$code";     if ($key) {;         return $key;     };     $reason = 'other';     if ($code -eq 0) {;         if ($Failure -is [Security.SecurityException] -or [string]$Failure.Status -in @('TrustFailure','SecureChannelFailure')) {;             $reason = 'security';         } elseif ([string]$Failure.Status -in @('ConnectFailure','NameResolutionFailure','ProxyNameResolutionFailure','Timeout','SendFailure','ReceiveFailure','ConnectionClosed')) {;             $reason = 'network';         };     };     return $VB3DownloadErrorKeys.$reason; }; function Get-VB3InstallScriptURL([string]$Pin) {;     if ($Pin) {;         if ($Pin -cnotmatch '^v0\.4\.(0|[1-9][0-9]*)$') {;             throw $BootstrapMessages.'windows_release_name_invalid';         };         return ('https://github.com/visitbasis/vb3-cli/releases/download/' + $Pin + '/install.ps1');     };     return 'https://github.com/visitbasis/vb3-cli/releases/latest/download/install.ps1'; }; [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; try {;     $url = Get-VB3InstallScriptURL $env:VB3_VERSION; } catch {;     Write-Warning $_.Exception.Message;     return; }; $wc = New-Object Net.WebClient; $wc.Encoding = [Text.Encoding]::UTF8; try {;     try {;         $script = $wc.DownloadString($url);     } catch {;         $key = Get-VB3DownloadErrorKey $_.Exception;         Write-Warning $BootstrapMessages.$key;         return;     };     & ([scriptblock]::Create($script)) -Language en; } finally {;     $wc.Dispose(); }
+$BootstrapMessages = ConvertFrom-Json '{"windows_download_blocked":"The release download was refused by the service or a security check. Contact your support team; keep Windows protection on.","windows_download_failed":"The release download failed. Try again later.","windows_download_network":"The release download could not be reached. Check your network connection and try again.","windows_release_name_invalid":"That release name is not valid. Copy the release tag exactly from the release page; it must look like v0.4.2.","windows_release_unavailable":"Windows files are unavailable for this release. Choose a release that includes Windows files, or try again later."}'; $VB3DownloadErrorKeys = ConvertFrom-Json '{"403":"windows_download_blocked","404":"windows_release_unavailable","407":"windows_download_blocked","451":"windows_download_blocked","network":"windows_download_network","other":"windows_download_failed","security":"windows_download_blocked"}'; function Get-VB3DownloadErrorKey($Failure) {;     while ($Failure.InnerException -and $Failure -isnot [Net.WebException]) {;         $Failure = $Failure.InnerException;     };     $code = 0;     if ($Failure.Response) {;         $code = [int]$Failure.Response.StatusCode;     };     $key = $VB3DownloadErrorKeys."$code";     if ($key) {;         return $key;     };     $reason = 'other';     if ($code -eq 0) {;         if ($Failure -is [Security.SecurityException] -or [string]$Failure.Status -in @('TrustFailure','SecureChannelFailure')) {;             $reason = 'security';         } elseif ([string]$Failure.Status -in @('ConnectFailure','NameResolutionFailure','ProxyNameResolutionFailure','Timeout','SendFailure','ReceiveFailure','ConnectionClosed')) {;             $reason = 'network';         };     };     return $VB3DownloadErrorKeys.$reason; }; function Get-VB3InstallScriptURL([string]$Pin) {;     if ($Pin) {;         if ($Pin -cnotmatch '^v0\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') {;             throw $BootstrapMessages.'windows_release_name_invalid';         };         return ('https://github.com/visitbasis/vb3-cli/releases/download/' + $Pin + '/install.ps1');     };     return 'https://github.com/visitbasis/vb3-cli/releases/latest/download/install.ps1'; }; [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; try {;     $url = Get-VB3InstallScriptURL $env:VB3_VERSION; } catch {;     Write-Warning $_.Exception.Message;     return; }; $wc = New-Object Net.WebClient; $wc.Encoding = [Text.Encoding]::UTF8; try {;     try {;         $script = $wc.DownloadString($url);     } catch {;         $key = Get-VB3DownloadErrorKey $_.Exception;         Write-Warning $BootstrapMessages.$key;         return;     };     & ([scriptblock]::Create($script)) -Language en; } finally {;     $wc.Dispose(); }
 ```
 <!-- windows-bootstrap-end -->
 
@@ -326,7 +319,7 @@ pasting it. These translations are provisional.
 ```
 <!-- windows-path-end -->
 
-### Connect, update and skills
+### Connect and update
 
 ```powershell
 $env:VB3_MCP_URL = Read-Host 'Account connection address'
@@ -346,25 +339,18 @@ run `vb3 whoami --json` again: the connection is remembered privately for your W
 user. Different addresses have separate saved connections. Run `vb3 logout` to sign
 out; offline sign-out removes local access but cannot confirm remote disconnection.
 
-`vb3 update` only prints the full install line and the ZIP instruction. Exit success
-means those instructions were delivered; JSON says `manual_update`, not updated.
-For a standard install, close every vb3 command and paste the install line again.
-For a manual copy, download/check the new ZIP and unpack it to the SAME manual folder
-with vb3 closed. The install line updates only the standard copy, not your manual one.
-Both retain saved sign-in. Restart any AI app that was using the old executable.
+`vb3 update` replaces the vb3.exe you ran, standard or manual copy, with the latest
+release, or the exact `VB3_VERSION` choice. It checks the ZIP's SHA-256 against
+windows-checksums.txt from the same release and starts the new copy once before
+swapping it in. If any step fails, your vb3.exe stays as it was and the message says
+why; if the latest release has no Windows files yet, choose one that has them as shown
+above. It reports `Updated vb3 from v0.4.1 to v0.5.0 at <full path>`, and `--json`
+gives the same result as on macOS and Linux. If another vb3 comes first on PATH, it
+names that copy. The replaced copy is removed the next time vb3 starts. Saved sign-in
+is kept. Restart any AI app that was using the old executable. The install line above
+is for the first install; `vb3 update` keeps either copy current.
 
-Optional skills use `%USERPROFILE%\.claude\skills\vb3-cli\SKILL.md` or
-`%USERPROFILE%\.agents\skills\vb3-cli\SKILL.md`:
-
-```powershell
-vb3 skill install claude
-vb3 skill install codex
-```
-
-Only install for the app you use. Reinstall after updating. Identical content is left
-alone; review a reported difference before choosing `--force`. Start a fresh AI app
-session and invoke `/vb3-cli` or `$vb3-cli`. Native skill installation has not yet been
-tried on Windows.
+There is no separate AI skill to install: `vb3 --help` tells your AI app how to work.
 
 ### Recover a connection location
 
@@ -399,7 +385,7 @@ not require changing permissions or asking an administrator.
 First set the SAME account address and personal connection folder used for sign-in, then run
 `vb3 logout` (or the full manual executable path). If offline or unreadable, check
 remote access on the account connections page later. Close every running vb3 command.
-The commands below remove only the exact files documented above, your saved connections in the chosen folder, the two optional skill folders
+The commands below remove only the exact files documented above, your saved connections in the chosen folder
 and the PATH entry added by this installation. They preserve unrelated files, users and other PATH entries. If a check prints a file path, it found a link or an unfamiliar file: stop and inspect it yourself.
 Use your actual manual path if you chose another; do not guess a folder to delete.
 Removing saved connections signs you out of every account connection saved in that folder.
@@ -547,14 +533,10 @@ Removing saved connections signs you out of every account connection saved in th
     $base = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { $env:APPDATA }
     $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     $profiles = Join-Path $base ('vb3-' + $sid)
-    $claude = Join-Path $env:USERPROFILE '.claude\skills\vb3-cli'
-    $codex = Join-Path $env:USERPROFILE '.agents\skills\vb3-cli'
     $plans = @(
         @{ Path = $standard; Pattern = '^(vb3\.exe|\.vb3-path-entry\.json)$' },
         @{ Path = $manual; Pattern = '^(vb3\.exe|README\.md|install\.ps1|\.vb3-path-entry\.json)$' },
-        @{ Path = $profiles; Pattern = '^(oauth-[0-9a-f]{64}\.json(\.lock)?|\.oauth-[0-9a-f]{32})$' },
-        @{ Path = $claude; Pattern = '^(SKILL\.md|\.vb3-install-.*)$' },
-        @{ Path = $codex; Pattern = '^(SKILL\.md|\.vb3-install-.*)$' }
+        @{ Path = $profiles; Pattern = '^(oauth-[0-9a-f]{64}\.json(\.lock)?|\.oauth-[0-9a-f]{32})$' }
     )
     foreach ($plan in $plans) {
         if (-not (Test-Path -LiteralPath $plan.Path)) {

@@ -326,7 +326,7 @@ $env:VB3_MCP_URL = Read-Host 'Account connection address'
 Remove-Item Env:VB3_BEARER -ErrorAction SilentlyContinue
 vb3 login
 vb3 whoami --json
-vb3 outlets list --page-size 1 --json
+vb3 data tables query --sql 'SELECT name FROM outlets ORDER BY name,id' --meaning 'My Outlets' --page-size 1 --json
 vb3 update
 ```
 
